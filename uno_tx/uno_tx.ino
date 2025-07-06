@@ -9,19 +9,19 @@
 #include "printf.h"
 #include "RF24.h"
 
-#define s_version "U.2025.06.24.9"
+#define s_version "U.2025.07.06.3"
 
-# define UP 2
-# define RIGHT 3
-# define DOWN 4
-# define LEFT 5
-# define EEE 6
-# define FFF 7
-# define Joy_BT 8
+# define UP_BTN 2
+# define RIGHT_BTN 3
+# define DOWN_BTN 4
+# define LEFT_BTN 5
+# define EEE_BTN 6
+# define FFF_BTN 7
+# define Joy_BTN 8
 # define Joy_X A0
 # define Joy_Y A1
 
-int bottons[]={UP,RIGHT,DOWN,LEFT,EEE,FFF,Joy_BT};
+int bottons[]={UP_BTN, RIGHT_BTN, DOWN_BTN, LEFT_BTN, EEE_BTN, FFF_BTN, Joy_BTN};
  
 #define CE_PIN 9
 #define CSN_PIN 10
@@ -106,11 +106,13 @@ void setup() {
 }  // setup
  
 void loop() {
-   int joy_X = analogRead(Joy_X);
+  c_payload = 0;
+
+  int joy_X = analogRead(Joy_X);
   int joy_Y = analogRead(Joy_Y);
 
-  Serial.print(" Joy_X:");Serial.print(joy_X);
-  Serial.print(" Joy_Y:");Serial.println(joy_Y);
+  Serial.print(" Joy_X:"); Serial.print(joy_X);
+  Serial.print(" Joy_Y:"); Serial.println(joy_Y);
 
   if (joy_Y < 100){
     //com_serial.write('b');
@@ -124,7 +126,12 @@ void loop() {
      // Serial.println("Sent f");
     }
     else{
-          c_payload = 'z';
+        c_payload = 'z';
+        if (digitalRead(UP_BTN) == 0)// 0 is pressed
+          c_payload = 'i'; // idle
+        else
+        if (digitalRead(DOWN_BTN) == 0)// 0 is pressed
+          c_payload = 'c'; // clear errors
 
     //  com_serial.write('z');
      // Serial.println("Sent z");
@@ -132,22 +139,22 @@ void loop() {
 
     // This device is a TX node
  
-    unsigned long start_timer = micros();                // start the timer
-    bool report = radio.write(&c_payload, sizeof(char));  // transmit & save the report
-    unsigned long end_timer = micros();                  // end the timer
+  unsigned long start_timer = micros();                // start the timer
+  bool report = radio.write(&c_payload, sizeof(char));  // transmit & save the report
+  unsigned long end_timer = micros();                  // end the timer
  
-    if (report) {
+  if (report) {
       Serial.print(F("Transmission successful! "));  // payload was delivered
       Serial.print(F("Time to transmit = "));
       Serial.print(end_timer - start_timer);  // print the timer result
       Serial.print(F(" us. Sent: "));
       Serial.println(c_payload);  // print payload sent
       //payload += 0.01;          // increment float payload
-    } else {
+  } else {
       Serial.println(F("Transmission failed or timed out"));  // payload was not delivered
       //radio.printPrettyDetails();
-    }
+  }
  
     // to make this example readable in the serial monitor
-    delay(1000);  // slow transmissions down by 1 second
+    delay(300);  // slow transmissions down by 1 second
 }  // loop
