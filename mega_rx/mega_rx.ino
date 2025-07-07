@@ -1,23 +1,18 @@
-/*
- * See documentation at https://nRF24.github.io/RF24
- * See License information at root directory of this library
- * Author: Brendan Doherty (2bndy5)
- */
-
-#define s_version "M.2025.07.05.3"
-
+#define s_version "M.2025.07.07.1"
+//-------------------------------------------------------------------
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
 #include <ODriveArduino.h>
 #include <SPI.h>
 #include <Adafruit_LSM6DSOX.h>
-#include <utility/imumaths.h>
+//#include <utility/imumaths.h>
 
 #include "printf.h"
 #include "RF24.h"
 
 
 // Printing with stream operator helper functions
+//-------------------------------------------------------------------
 template<class T> inline Print& operator <<(Print &obj,     T arg) { obj.print(arg);    return obj; }
 template<>        inline Print& operator <<(Print &obj, float arg) { obj.print(arg, 4); return obj; }
 //-------------------------------------------------------------------
@@ -58,9 +53,11 @@ Adafruit_LSM6DSOX sox;
 #define robot_state_stopped 0
 #define robot_state_moving_forward 1
 #define robot_state_moving_backward 2
+#define robot_state_idle 3
 
 int robot_state = robot_state_stopped;
 
+#define max_current 1
 //-------------------------------------------------------------------
 void setup_sensors()
 {
@@ -155,8 +152,10 @@ void setup_odrive()
 
   for (int axis = 0; axis < 2; ++axis) {
     odrive_serial << "w axis" << axis << ".controller.config.vel_limit " << 2.0f << '\n';
-    odrive_serial << "w axis" << axis << ".motor.config.current_lim " << 11.0f << '\n';
-    // This ends up writing something like "w axis0.motor.config.current_lim 10.0\n"
+    odrive_serial << "w axis" << axis << ".motor.config.current_lim " << 21.0f << '\n';
+
+    odrive_serial << "w axis" << axis << ".controller.config.input_mode " << INPUT_MODE_PASSTHROUGH << '\n';
+    odrive_serial << "w axis" << axis << ".controller.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
   }
 
   Serial.println("Ready!");
@@ -255,8 +254,10 @@ void handle_motor_command(char c)
 
       Serial.println("Executing forward");
       //odrive.SetPosition(0, 1);
-      odrive.SetVelocity(0, 1);
+      //odrive.SetVelocity(0, 1);
+      odrive.SetCurrent(0, max_current);
       delay(5);
+
     }
 
     if ((c == 'b') && (robot_state != robot_state_moving_backward)) {
@@ -268,7 +269,8 @@ void handle_motor_command(char c)
 
       Serial.println("Executing backward");
       //odrive.SetPosition(0, -1);
-      odrive.SetVelocity(0, -1);
+      //odrive.SetVelocity(0, -1);
+      odrive.SetCurrent(0, -max_current);
       delay(5);
     }
 
@@ -281,7 +283,8 @@ void handle_motor_command(char c)
 
       Serial.println("Executing zero");
       //odrive.SetPosition(0, 0);
-      odrive.SetVelocity(0, 0);
+      //odrive.SetVelocity(0, 0);
+      odrive.SetCurrent(0, 0.0);
       delay(5);
     }
 
@@ -299,10 +302,16 @@ void handle_motor_command(char c)
           Serial << "Position=" << odrive.GetPosition(0) << '\n';
     }
 
-    if (c == 'i') {
+    if (c == 'c') {
+      odrive.clear_errors();
+    }
+
+    if ((c == 'i') && (robot_state != robot_state_idle)) {
       int requested_state = AXIS_STATE_IDLE;
       Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
       if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
+     // odrive.SetCurrent(0, 0.0);
+      robot_state = robot_state_idle;
     }
 }
 //-------------------------------------------------------------------
@@ -311,8 +320,8 @@ void loop() {
     sensors_event_t gyro;
     sensors_event_t temp;
     sox.getEvent(&accel, &gyro, &temp);
-    /* Display the results (acceleration is measured in m/s^2) */
-    /*
+  // Display the results (acceleration is measured in m/s^2) 
+  /*
     Serial.print("\t\tAccel X: ");
     Serial.print(accel.acceleration.x);
     Serial.print(" \tY: ");
@@ -321,6 +330,7 @@ void loop() {
     Serial.print(accel.acceleration.z);
     Serial.println(" m/s^2 ");
 */
+/*
     if (accel.acceleration.x > 2)
       handle_motor_command('f');
     else
@@ -328,7 +338,7 @@ void loop() {
         handle_motor_command('b');
       else
         handle_motor_command('z');
-    // This device is a RX node
+*/      
  
     uint8_t pipe;
     if (radio.available(&pipe)) {              // is there a payload? get the pipe number that received it
@@ -340,9 +350,10 @@ void loop() {
       Serial.print(pipe);  // print the pipe number
       Serial.print(F(": "));
       Serial.println(c_payload);  // print the payload's value
+
       handle_motor_command(c_payload);
     }
 
-    delay (200);
+    delay (100);
  
 }  // loop
