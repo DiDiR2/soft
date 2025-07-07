@@ -1,10 +1,3 @@
-/*
- * See documentation at https://nRF24.github.io/RF24
- * See License information at root directory of this library
- * Author: Brendan Doherty (2bndy5)
- */
-
- 
 #include <SPI.h>
 #include "printf.h"
 #include "RF24.h"
