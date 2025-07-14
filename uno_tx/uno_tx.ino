@@ -2,7 +2,7 @@
 #include "printf.h"
 #include "RF24.h"
 
-#define s_version "U.2025.07.06.3"
+#define s_version "U.2025.07.13.1"
 
 # define UP_BTN 2
 # define RIGHT_BTN 3
@@ -110,21 +110,44 @@ void loop() {
   if (joy_Y < 100){
     //com_serial.write('b');
     //Serial.println("Sent b");
-    c_payload = 'b';
+    c_payload = 'b';// go backward
   }
   else
     if (joy_Y > 900){
-      c_payload = 'f';
+      c_payload = 'f'; // go forward
+     // com_serial.write('f');
+     // Serial.println("Sent f");
+    }
+    else
+      if (joy_X < 100){
+    //com_serial.write('b');
+    //Serial.println("Sent b");
+    c_payload = 'l';// rotate left
+  }
+  else
+    if (joy_X > 900){
+      c_payload = 'r';// rotate right
      // com_serial.write('f');
      // Serial.println("Sent f");
     }
     else{
         c_payload = 'z';
-        if (digitalRead(UP_BTN) == 0)// 0 is pressed
+        if (digitalRead(UP_BTN) == 0)// 0 means pressed
           c_payload = 'i'; // idle
         else
-        if (digitalRead(DOWN_BTN) == 0)// 0 is pressed
-          c_payload = 'c'; // clear errors
+          if (digitalRead(DOWN_BTN) == 0)// 0 means pressed
+            c_payload = 'c'; // clear errors
+          else
+            if (digitalRead(LEFT_BTN) == 0)// 0 means pressed
+              c_payload = 'd'; // decrease current
+            else
+              if (digitalRead(RIGHT_BTN) == 0)// 0 means pressed
+                c_payload = 'u'; // increase current
+              else
+                if (digitalRead(Joy_BTN) == 0)// 0 means pressed
+                  c_payload = 'g'; // increase current
+
+
 
     //  com_serial.write('z');
      // Serial.println("Sent z");
