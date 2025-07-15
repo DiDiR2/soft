@@ -2,7 +2,7 @@
 #include "printf.h"
 #include "RF24.h"
 
-#define s_version "U.2025.07.13.1"
+#define s_version "U.2025.07.15.0"
 
 # define UP_BTN 2
 # define RIGHT_BTN 3
@@ -10,6 +10,7 @@
 # define LEFT_BTN 5
 # define EEE_BTN 6
 # define FFF_BTN 7
+
 # define Joy_BTN 8
 # define Joy_X A0
 # define Joy_Y A1
@@ -97,6 +98,16 @@ void setup() {
 //  radio.printPrettyDetails(); // (larger) function that prints human readable data
  
 }  // setup
+/*
+  Serial.println("Send the character 'f' to move forward");
+  Serial.println("Send the character 'b' to move backward");
+  Serial.println("Send the character 'l' to spin to the left");
+  Serial.println("Send the character 'r' to spin to the right");
+  Serial.println("Send the character 'q' to drive to forward left");
+  Serial.println("Send the character 'w' to drive to forward right");
+  Serial.println("Send the character 'a' to drive to backward left");
+  Serial.println("Send the character 's to drive to backward right");
+*/
  
 void loop() {
   c_payload = 0;
@@ -107,51 +118,50 @@ void loop() {
   Serial.print(" Joy_X:"); Serial.print(joy_X);
   Serial.print(" Joy_Y:"); Serial.println(joy_Y);
 
-  if (joy_Y < 100){
-    //com_serial.write('b');
-    //Serial.println("Sent b");
-    c_payload = 'b';// go backward
-  }
-  else
-    if (joy_Y > 900){
-      c_payload = 'f'; // go forward
-     // com_serial.write('f');
-     // Serial.println("Sent f");
-    }
+  if (joy_Y > 900){
+    if (joy_X > 900)
+        c_payload = 'w'; // forward right
     else
-      if (joy_X < 100){
-    //com_serial.write('b');
-    //Serial.println("Sent b");
-    c_payload = 'l';// rotate left
+      if (joy_X < 100)
+        c_payload = 'q'; // forward left
+      else
+        c_payload = 'f'; // just forward
   }
-  else
-    if (joy_X > 900){
-      c_payload = 'r';// rotate right
-     // com_serial.write('f');
-     // Serial.println("Sent f");
-    }
-    else{
-        c_payload = 'z';
-        if (digitalRead(UP_BTN) == 0)// 0 means pressed
-          c_payload = 'i'; // idle
+  else{
+    if (joy_Y < 100){
+      if (joy_X > 900)
+          c_payload = 's'; // backward right
+      else
+        if (joy_X < 100)
+          c_payload = 'a'; // backward left
         else
-          if (digitalRead(DOWN_BTN) == 0)// 0 means pressed
-            c_payload = 'c'; // clear errors
-          else
-            if (digitalRead(LEFT_BTN) == 0)// 0 means pressed
-              c_payload = 'd'; // decrease current
-            else
-              if (digitalRead(RIGHT_BTN) == 0)// 0 means pressed
-                c_payload = 'u'; // increase current
-              else
-                if (digitalRead(Joy_BTN) == 0)// 0 means pressed
-                  c_payload = 'g'; // increase current
-
-
-
-    //  com_serial.write('z');
-     // Serial.println("Sent z");
+        c_payload = 'b'; // just backward
     }
+    else{// Y is between 100 and 900
+      if (joy_X > 900)
+          c_payload = 'r'; // spin left
+      else
+        if (joy_X < 100)
+          c_payload = 'l'; // spin right
+        else
+          c_payload = 'z';// zero
+    }
+  }
+
+  if (digitalRead(UP_BTN) == 0)// 0 means pressed
+    c_payload = 'u'; // increase current
+  else
+    if (digitalRead(DOWN_BTN) == 0)// 0 means pressed
+      c_payload = 'd'; // decrease current
+    else
+      if (digitalRead(LEFT_BTN) == 0)// 0 means pressed
+        c_payload = 'g'; // get params
+      else
+        if (digitalRead(RIGHT_BTN) == 0)// 0 means pressed
+          c_payload = 'c'; // clear errors
+        else
+          if (digitalRead(Joy_BTN) == 0)// 0 means pressed
+            c_payload = 'i'; // idle
 
     // This device is a TX node
  
@@ -172,5 +182,5 @@ void loop() {
   }
  
     // to make this example readable in the serial monitor
-    delay(300);  // slow transmissions down by 1 second
+    delay(100);  // slow transmissions down by 1 second
 }  // loop
