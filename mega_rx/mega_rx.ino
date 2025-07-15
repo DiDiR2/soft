@@ -1,4 +1,4 @@
-#define s_version "M.2025.07.15.8"
+#define s_version "M.2025.07.15.9"
 //-------------------------------------------------------------------
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
@@ -48,7 +48,8 @@ ODriveArduino odrive(odrive_serial);
 
 #define M0_DIR 1
 #define M1_DIR -1
-#define CURVE_DIFF 1
+//#define CURVE_DIFF 1
+#define default_max_power 1.5
 //-------------------------------------------------------------------
 // SENSORS variables
 Adafruit_LSM6DSOX sox;
@@ -246,7 +247,7 @@ Serial.println("Connecting to wifi ...");
       Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
       if(!odrive.run_state(motornum, requested_state, true, 25.0f)) return;
 */
-  max_current = 1;
+  max_current = default_max_power;
 }  // setup
 //-------------------------------------------------------------------
 void handle_motor_command(char c)
@@ -287,9 +288,9 @@ void handle_motor_command(char c)
       int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
       Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
       if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, M0_DIR * (max_current +  CURVE_DIFF));
+      odrive.SetCurrent(0, M0_DIR * max_current);// +  CURVE_DIFF));
       if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, M1_DIR * max_current);
+      odrive.SetCurrent(1, 0);//M1_DIR * max_current);
 
       Serial.println("Moving forward left");
       delay(5);
@@ -301,9 +302,9 @@ void handle_motor_command(char c)
       int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
       Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
       if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, M0_DIR * max_current);
+      odrive.SetCurrent(0, 0);//M0_DIR * max_current);
       if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, M1_DIR * (max_current + CURVE_DIFF));
+      odrive.SetCurrent(1, M1_DIR * max_current);// + CURVE_DIFF));
 
       Serial.println("Moving forward right");
       delay(5);
@@ -329,9 +330,9 @@ void handle_motor_command(char c)
       int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
       Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
       if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, -M0_DIR*(max_current + CURVE_DIFF));
+      odrive.SetCurrent(0, -M0_DIR*max_current);// + CURVE_DIFF));
       if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, -M1_DIR*max_current);
+      odrive.SetCurrent(1, 0);//-M1_DIR*max_current);
 
       Serial.println("Moving back left");
       delay(5);
@@ -343,9 +344,9 @@ void handle_motor_command(char c)
       int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
       Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
       if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, -M0_DIR * max_current);
+      odrive.SetCurrent(0, 0);//-M0_DIR * max_current);
       if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, -M1_DIR * (max_current + CURVE_DIFF));
+      odrive.SetCurrent(1, -M1_DIR * max_current);// + CURVE_DIFF));
 
       Serial.println("Moving back right");
       delay(5);
@@ -415,7 +416,7 @@ void handle_motor_command(char c)
 
     if (c == 'c') {
       odrive.clear_errors();
-      max_current = 1.0;
+      max_current = default_max_power;
     }
 
     if (c == 'u') {
