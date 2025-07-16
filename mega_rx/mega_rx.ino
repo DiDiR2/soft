@@ -1,10 +1,11 @@
-#define s_version "M.2025.07.15.9"
+#define s_version "M.2025.07.16.1"
 //-------------------------------------------------------------------
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
-#include <ODriveArduino.h>
 #include <SPI.h>
 #include <Adafruit_LSM6DSOX.h>
+#include "ODriveArduino_my.h"
+#include "motor_commands.h"
 //#include <utility/imumaths.h>
 
 #include "printf.h"
@@ -12,9 +13,6 @@
 
 
 // Printing with stream operator helper functions
-//-------------------------------------------------------------------
-template<class T> inline Print& operator <<(Print &obj,     T arg) { obj.print(arg);    return obj; }
-template<>        inline Print& operator <<(Print &obj, float arg) { obj.print(arg, 4); return obj; }
 //-------------------------------------------------------------------
 // WIFI variables
 #define CE_PIN 9
@@ -44,30 +42,14 @@ char c_payload;
 // ODRIVE variables
 HardwareSerial& odrive_serial = Serial1;
 
-ODriveArduino odrive(odrive_serial);
+t_ODriveArduino odrive(odrive_serial);
 
-#define M0_DIR 1
-#define M1_DIR -1
-//#define CURVE_DIFF 1
-#define default_max_power 1.5
 //-------------------------------------------------------------------
 // SENSORS variables
 Adafruit_LSM6DSOX sox;
 //-------------------------------------------------------------------
 // OTHERS
-#define robot_state_stopped 0
-#define robot_state_moving_forward 1
-#define robot_state_moving_backward 2
-#define robot_state_spin_left 3
-#define robot_state_spin_right 4
-#define robot_state_moving_forward_left 5
-#define robot_state_moving_forward_right 6
-#define robot_state_moving_back_left 7
-#define robot_state_moving_back_right 8
-#define robot_state_idle 9
-
-
-int robot_state = robot_state_stopped;
+int robot_state;
 
 float max_current;
 //-------------------------------------------------------------------
@@ -162,12 +144,12 @@ void setup_odrive()
   // You can of course set them different if you want.
   // See the documentation or play around in odrivetool to see the available parameters
 
-  for (int axis = 0; axis < 2; ++axis) {
-    odrive_serial << "w axis" << axis << ".controller.config.vel_limit " << 1.0f << '\n';
-    odrive_serial << "w axis" << axis << ".motor.config.current_lim " << 25.0f << '\n';
+  for (int m = 0; m < 2; ++m) {
+    odrive_serial << "w axis" << m << ".controller.config.vel_limit " << 1.5f << '\n';
+    odrive_serial << "w axis" << m << ".motor.config.current_lim " << 30.0f << '\n';
 
-    odrive_serial << "w axis" << axis << ".controller.config.input_mode " << INPUT_MODE_PASSTHROUGH << '\n';
-    odrive_serial << "w axis" << axis << ".controller.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
+    odrive_serial << "w axis" << m << ".controller.config.input_mode " << INPUT_MODE_PASSTHROUGH << '\n';
+    odrive_serial << "w axis" << m << ".controller.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
   }
 
   Serial.println("Ready!");
@@ -224,7 +206,7 @@ Serial.println("Connecting to wifi ...");
   Serial.println(F("wifi alive!"));
 
   setup_wifi();
-
+// ODrive setup
   Serial.println("Connecting to ODrive ...");
   odrive_serial.begin(115200);
   while (!odrive_serial) {
@@ -247,199 +229,21 @@ Serial.println("Connecting to wifi ...");
       Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
       if(!odrive.run_state(motornum, requested_state, true, 25.0f)) return;
 */
+  robot_state = robot_state_stopped;
+
   max_current = default_max_power;
+  odrive.SetCurrent(0, 0);// stop the motors
+  odrive.SetCurrent(1, 0);
 }  // setup
 //-------------------------------------------------------------------
-void handle_motor_command(char c)
+void loop() 
 {
-    // Run calibration sequence
-    if (c == '0' || c == '1') {
-      int motornum = c-'0';
-      int requested_state;
-
-      requested_state = AXIS_STATE_MOTOR_CALIBRATION;
-      Serial << "Axis" << c << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(motornum, requested_state, true)) return;
-
-      requested_state = AXIS_STATE_ENCODER_OFFSET_CALIBRATION;
-      Serial << "Axis" << c << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(motornum, requested_state, true, 25.0f)) return;
-    }
-
-    if ((c == 'f') && (robot_state != robot_state_moving_forward)){
-      robot_state = robot_state_moving_forward;
-      
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, M0_DIR * max_current);
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, M1_DIR * max_current);
-
-      Serial.println("Executing forward");
-      //odrive.SetPosition(0, 1);
-      //odrive.SetVelocity(0, 1);
-      delay(5);
-    }
-
-    if ((c == 'q') && (robot_state != robot_state_moving_forward_left)){
-      robot_state = robot_state_moving_forward_left;
-      
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, M0_DIR * max_current);// +  CURVE_DIFF));
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, 0);//M1_DIR * max_current);
-
-      Serial.println("Moving forward left");
-      delay(5);
-    }
-
-    if ((c == 'w') && (robot_state != robot_state_moving_forward_right)){
-      robot_state = robot_state_moving_forward_right;
-      
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, 0);//M0_DIR * max_current);
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, M1_DIR * max_current);// + CURVE_DIFF));
-
-      Serial.println("Moving forward right");
-      delay(5);
-    }
-
-    if ((c == 'b') && (robot_state != robot_state_moving_backward)) {
-      robot_state = robot_state_moving_backward;
-
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, -M0_DIR*max_current);
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, -M1_DIR*max_current);
-
-      Serial.println("Executing backward");
-      delay(5);
-    }
-
-    if ((c == 'a') && (robot_state != robot_state_moving_back_left)){
-      robot_state = robot_state_moving_back_left;
-      
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, -M0_DIR*max_current);// + CURVE_DIFF));
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, 0);//-M1_DIR*max_current);
-
-      Serial.println("Moving back left");
-      delay(5);
-    }
-
-    if ((c == 's') && (robot_state != robot_state_moving_back_right)){
-      robot_state = robot_state_moving_back_right;
-      
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, 0);//-M0_DIR * max_current);
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, -M1_DIR * max_current);// + CURVE_DIFF));
-
-      Serial.println("Moving back right");
-      delay(5);
-    }
-
-    if ((c == 'l') && (robot_state != robot_state_spin_left)){
-      robot_state = robot_state_spin_left;
-      
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, M0_DIR*max_current);
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, -M1_DIR*max_current);
-
-      Serial.println("Rotating left");
-      delay(5);
-    }
-
-    if ((c == 'r') && (robot_state != robot_state_spin_right)){
-      robot_state = robot_state_spin_right;
-      
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, -M0_DIR*max_current);
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, M1_DIR*max_current);
-
-      Serial.println("Rotating right");
-      delay(5);
-    }
-
-
-    if ((c == 'z') && (robot_state != robot_state_stopped) && (robot_state != robot_state_idle)) {
-      robot_state = robot_state_stopped;
-
-      int requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(0, 0.0);
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-      odrive.SetCurrent(1, 0.0);
-
-      Serial.println("Stop");
-      delay(5);
-    }
-
-    if ((c == 'i') && (robot_state != robot_state_idle) && (robot_state != robot_state_stopped)) {
-      int requested_state = AXIS_STATE_IDLE;
-      Serial << "Axis" << 0 << ": Requesting state " << requested_state << '\n';
-      if(!odrive.run_state(0, requested_state, false /*don't wait*/)) return;
-      if(!odrive.run_state(1, requested_state, false /*don't wait*/)) return;
-     // odrive.SetCurrent(0, 0.0);
-      robot_state = robot_state_idle;
-    }
-
-    // Read bus voltage
-    if (c == 'g') {
-      odrive_serial << "r vbus_voltage\n";
-      Serial << "Vbus voltage: " << odrive.readFloat() << '\n';
-      Serial << "Speed= " << odrive.GetVelocity(0) << '\n';
-      Serial << "Position=" << odrive.GetPosition(0) << '\n';
-      Serial << "Max current=" << max_current << '\n';
-      Serial << "Robot state=" << robot_state_stopped << '\n';
-    }
-
-    if (c == 'c') {
-      odrive.clear_errors();
-      max_current = default_max_power;
-    }
-
-    if (c == 'u') {
-        if (max_current < 3)
-          max_current+= 0.1;
-        Serial << "Current=" << max_current << '\n';
-    }
-
-    if (c == 'd') {
-        if (max_current >= 0.1)
-          max_current -= 0.1;
-        Serial << "Current=" << max_current << '\n';
-    }
-
-}
-//-------------------------------------------------------------------
-void loop() {
     sensors_event_t accel;
     sensors_event_t gyro;
     sensors_event_t temp;
     sox.getEvent(&accel, &gyro, &temp);
-  // Display the results (acceleration is measured in m/s^2) 
-  /*
+// Display the results (acceleration is measured in m/s^2) 
+/*
     Serial.print("\t\tAccel X: ");
     Serial.print(accel.acceleration.x);
     Serial.print(" \tY: ");
@@ -456,8 +260,7 @@ void loop() {
         handle_motor_command('b');
       else
         handle_motor_command('z');
-*/      
- 
+*/ 
     uint8_t pipe;
     if (radio.available(&pipe)) {              // is there a payload? get the pipe number that received it
       uint8_t bytes = radio.getPayloadSize();  // get the size of the payload
@@ -469,9 +272,8 @@ void loop() {
       Serial.print(F(": "));
       Serial.println(c_payload);  // print the payload's value
 
-      handle_motor_command(c_payload);
+      handle_motor_command(odrive, c_payload);
     }
 
     delay (10);
- 
 }  // loop
