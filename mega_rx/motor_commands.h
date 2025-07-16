@@ -5,9 +5,9 @@
 //-------------------------------------------------------------------
 #define M0_DIR 1
 #define M1_DIR -1
-//#define CURVE_DIFF 1
+
 #define init_torque 1.3
-//#define rotate_current 0.7
+
 #define MAX_VELOCITY 1
 #define MAX_VELOCITY_ROTATION 0.7
 //-------------------------------------------------------------------
