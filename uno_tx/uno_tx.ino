@@ -2,7 +2,7 @@
 #include "printf.h"
 #include "RF24.h"
 
-#define s_version "U.2025.07.15.0"
+#define s_version "U.2025.07.16.1"
 
 # define UP_BTN 2
 # define RIGHT_BTN 3
@@ -162,6 +162,10 @@ void loop() {
         else
           if (digitalRead(Joy_BTN) == 0)// 0 means pressed
             c_payload = 'i'; // idle
+          else
+          if (digitalRead(EEE_BTN) == 0)// 0 means pressed
+            c_payload = 'h'; // hold position
+          
 
     // This device is a TX node
  
