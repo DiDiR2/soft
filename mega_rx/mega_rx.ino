@@ -1,4 +1,4 @@
-#define s_version "M.2025.07.16.9"
+#define s_version "M.2025.07.16.10"
 //-------------------------------------------------------------------
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>

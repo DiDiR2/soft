@@ -40,9 +40,7 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
 
     if ((c == 'q') && (robot_state != robot_state_moving_forward_left)){
       robot_state = robot_state_moving_forward_left;
-      odrive.SetCurrent(0, 0);
-      odrive.SetCurrent(1, 0);
-      delay(100);
+      delay(10);
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
       odrive.serial_ << "w axis" << 1 << ".controller.config.vel_limit " << MAX_VELOCITY_ROTATION<< '\n';
 
@@ -58,10 +56,6 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
     }
 
     if ((c == 'w') && (robot_state != robot_state_moving_forward_right)){
-      odrive.SetCurrent(0, 0);
-      odrive.SetCurrent(1, 0);
-      delay(100);
-
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY_ROTATION << '\n';
       odrive.serial_ << "w axis" << 1 << ".controller.config.vel_limit " << MAX_VELOCITY<< '\n';
 
@@ -101,9 +95,6 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
     }
 
     if ((c == 'a') && (robot_state != robot_state_moving_back_left)){
-      odrive.SetCurrent(0, 0);
-      odrive.SetCurrent(1, 0);
-      delay(100);
 
       robot_state = robot_state_moving_back_left;
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
@@ -121,9 +112,6 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
     }
 
     if ((c == 's') && (robot_state != robot_state_moving_back_right)){
-      odrive.SetCurrent(0, 0);
-      odrive.SetCurrent(1, 0);
-      delay(100);
 
       robot_state = robot_state_moving_back_right;
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY_ROTATION << '\n';
