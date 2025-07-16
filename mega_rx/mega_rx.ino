@@ -1,4 +1,4 @@
-#define s_version "M.2025.07.16.10"
+#define s_version "M.2025.07.16.13"
 //-------------------------------------------------------------------
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
@@ -60,7 +60,7 @@ void setup() {
  
   Serial.print("Version: ");
   Serial.println(s_version);
-
+/*
   // sensors setup
   Serial.println("Connecting to LSM6DSOX sensor ...");
    if (!sox.begin_I2C()) {
@@ -75,6 +75,7 @@ void setup() {
   Serial.println("LSM6DSOX alive!");
 
   setup_sensors(sox);
+*/
 
 // wifi setup
 Serial.println("Connecting to wifi ...");
@@ -137,10 +138,12 @@ Serial.println("Connecting to wifi ...");
 //-------------------------------------------------------------------
 void loop() 
 {
+  /*
     sensors_event_t accel;
     sensors_event_t gyro;
     sensors_event_t temp;
     sox.getEvent(&accel, &gyro, &temp);
+    */
 // Display the results (acceleration is measured in m/s^2) 
 /*
     Serial.print("\t\tAccel X: ");

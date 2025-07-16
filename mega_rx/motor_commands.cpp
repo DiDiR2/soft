@@ -41,6 +41,9 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
     if ((c == 'q') && (robot_state != robot_state_moving_forward_left)){
       robot_state = robot_state_moving_forward_left;
       delay(10);
+      for (int m = 0; m < 2; ++m)
+        odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
+
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
       odrive.serial_ << "w axis" << 1 << ".controller.config.vel_limit " << MAX_VELOCITY_ROTATION<< '\n';
 
@@ -56,6 +59,9 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
     }
 
     if ((c == 'w') && (robot_state != robot_state_moving_forward_right)){
+      for (int m = 0; m < 2; ++m)
+        odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
+
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY_ROTATION << '\n';
       odrive.serial_ << "w axis" << 1 << ".controller.config.vel_limit " << MAX_VELOCITY<< '\n';
 
@@ -76,9 +82,7 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
 
       for (int m = 0; m < 2; ++m){
         odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
-        delay(5);
         odrive.serial_ << "w axis" << m << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
-        delay(5);
       }
 
       robot_state = robot_state_moving_backward;
@@ -97,6 +101,9 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
     if ((c == 'a') && (robot_state != robot_state_moving_back_left)){
 
       robot_state = robot_state_moving_back_left;
+      for (int m = 0; m < 2; ++m)
+        odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
+
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
       odrive.serial_ << "w axis" << 1 << ".controller.config.vel_limit " << MAX_VELOCITY_ROTATION << '\n';
 
@@ -114,6 +121,9 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
     if ((c == 's') && (robot_state != robot_state_moving_back_right)){
 
       robot_state = robot_state_moving_back_right;
+      for (int m = 0; m < 2; ++m)
+        odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
+
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY_ROTATION << '\n';
       odrive.serial_ << "w axis" << 1 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
 
@@ -130,6 +140,9 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
 
     if ((c == 'l') && (robot_state != robot_state_spin_left)){
       robot_state = robot_state_spin_left;
+      for (int m = 0; m < 2; ++m)
+        odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
+
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
       odrive.serial_ << "w axis" << 1 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
       
@@ -146,6 +159,9 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
 
     if ((c == 'r') && (robot_state != robot_state_spin_right)){
       robot_state = robot_state_spin_right;
+      for (int m = 0; m < 2; ++m)
+        odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
+
       odrive.serial_ << "w axis" << 0 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
       odrive.serial_ << "w axis" << 1 << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
       
@@ -235,14 +251,14 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
     }
 
     if (c == 'u') {
-        if (max_current < 3)
-          max_current+= 0.1;
+        if (max_current < 5)
+          max_current+= 0.2;
         Serial << "Current=" << max_current << '\n';
     }
 
     if (c == 'd') {
-        if (max_current >= 0.1)
-          max_current -= 0.1;
+        if (max_current >= 0.2)
+          max_current -= 0.2;
         Serial << "Current=" << max_current << '\n';
     }
 }
