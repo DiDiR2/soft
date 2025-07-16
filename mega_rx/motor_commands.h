@@ -6,12 +6,12 @@
 #define M0_DIR 1
 #define M1_DIR -1
 //#define CURVE_DIFF 1
-#define default_max_power 1.5
+#define init_torque 1.3
+//#define rotate_current 0.7
+#define MAX_VELOCITY 1
+#define MAX_VELOCITY_ROTATION 0.7
 //-------------------------------------------------------------------
-void handle_motor_command(t_ODriveArduino &odrive, char c);
-//-------------------------------------------------------------------
-template<class T> inline Print& operator <<(Print &obj,     T arg) { obj.print(arg);    return obj; }
-template<>        inline Print& operator <<(Print &obj, float arg) { obj.print(arg, 4); return obj; }
+void handle_motor_command(t_ODriveArduino &odrive, char command);
 //-------------------------------------------------------------------
 #define robot_state_stopped 0
 #define robot_state_moving_forward 1

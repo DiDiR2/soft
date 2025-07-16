@@ -1,9 +1,10 @@
 #include "Arduino.h"
 #include "ODriveArduino_my.h"
+#include "print_commands.h"
 // ----------------------------------------------------------------------------------
 // Print with stream operator
-template<class T> inline Print& operator <<(Print &obj,     T arg) { obj.print(arg);    return obj; }
-template<>        inline Print& operator <<(Print &obj, float arg) { obj.print(arg, 4); return obj; }
+//template<class T> inline Print& operator <<(Print &obj,     T arg) { obj.print(arg);    return obj; }
+//template<>        inline Print& operator <<(Print &obj, float arg) { obj.print(arg, 4); return obj; }
 // ----------------------------------------------------------------------------------
 t_ODriveArduino::t_ODriveArduino(Stream& serial): serial_(serial) 
 {

@@ -1,16 +1,15 @@
-#define s_version "M.2025.07.16.1"
+#define s_version "M.2025.07.16.9"
 //-------------------------------------------------------------------
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
 #include <SPI.h>
+
 #include <Adafruit_LSM6DSOX.h>
 #include "ODriveArduino_my.h"
-#include "motor_commands.h"
-//#include <utility/imumaths.h>
-
-#include "printf.h"
 #include "RF24.h"
 
+#include "motor_commands.h"
+#include "setup_commands.h"
 
 // Printing with stream operator helper functions
 //-------------------------------------------------------------------
@@ -28,7 +27,7 @@ uint8_t address[][6] = { "1Node", "2Node" };
  
 // to use different addresses on a pair of radios, we need a variable to
 // uniquely identify which address this radio will use to transmit
-bool radioNumber = 1;  // 0 uses address[0] to transmit, 1 uses address[1] to transmit
+//bool radioNumber = 1;  // 0 uses address[0] to transmit, 1 uses address[1] to transmit
  
 // Used to control whether this node is sending or receiving
 //bool wifi_role = false;  // true = TX role, false = RX role
@@ -43,7 +42,6 @@ char c_payload;
 HardwareSerial& odrive_serial = Serial1;
 
 t_ODriveArduino odrive(odrive_serial);
-
 //-------------------------------------------------------------------
 // SENSORS variables
 Adafruit_LSM6DSOX sox;
@@ -52,125 +50,6 @@ Adafruit_LSM6DSOX sox;
 int robot_state;
 
 float max_current;
-//-------------------------------------------------------------------
-void setup_sensors()
-{
-    Serial.print("Accelerometer range set to: ");
-
-  switch (sox.getAccelRange()) {
-  case LSM6DS_ACCEL_RANGE_2_G:
-    Serial.println("+-2G");
-    break;
-  case LSM6DS_ACCEL_RANGE_4_G:
-    Serial.println("+-4G");
-    break;
-  case LSM6DS_ACCEL_RANGE_8_G:
-    Serial.println("+-8G");
-    break;
-  case LSM6DS_ACCEL_RANGE_16_G:
-    Serial.println("+-16G");
-    break;
-  }
-
-  Serial.print("Accelerometer data rate set to: ");
-
-  switch (sox.getAccelDataRate()) {
-  case LSM6DS_RATE_SHUTDOWN:
-    Serial.println("0 Hz");
-    break;
-  case LSM6DS_RATE_12_5_HZ:
-    Serial.println("12.5 Hz");
-    break;
-  case LSM6DS_RATE_26_HZ:
-    Serial.println("26 Hz");
-    break;
-  case LSM6DS_RATE_52_HZ:
-    Serial.println("52 Hz");
-    break;
-  case LSM6DS_RATE_104_HZ:
-    Serial.println("104 Hz");
-    break;
-  case LSM6DS_RATE_208_HZ:
-    Serial.println("208 Hz");
-    break;
-  case LSM6DS_RATE_416_HZ:
-    Serial.println("416 Hz");
-    break;
-  case LSM6DS_RATE_833_HZ:
-    Serial.println("833 Hz");
-    break;
-  case LSM6DS_RATE_1_66K_HZ:
-    Serial.println("1.66 KHz");
-    break;
-  case LSM6DS_RATE_3_33K_HZ:
-    Serial.println("3.33 KHz");
-    break;
-  case LSM6DS_RATE_6_66K_HZ:
-    Serial.println("6.66 KHz");
-    break;
-  }
-}
-//-------------------------------------------------------------------
-void setup_wifi()
-{
-    Serial.print(F("radioNumber = "));
-  Serial.println((int)radioNumber);
- 
-  // role variable is hardcoded to RX behavior, inform the user of this
-  Serial.println(F("*** PRESS 'T' to begin transmitting to the other node"));
- 
-  // Set the PA Level low to try preventing power supply related problems
-  // because these examples are likely run with nodes in close proximity to
-  // each other.
-  radio.setPALevel(RF24_PA_LOW);  // RF24_PA_MAX is default.
- 
-  // save on transmission time by setting the radio to only transmit the
-  // number of bytes we need to transmit a float
-  radio.setPayloadSize(sizeof(c_payload));  // float datatype occupies 4 bytes
- 
-  // set the TX address of the RX node for use on the TX pipe (pipe 0)
-  radio.stopListening(address[radioNumber]);  // put radio in TX mode
- 
-  // set the RX address of the TX node into a RX pipe
-  radio.openReadingPipe(1, address[!radioNumber]);  // using pipe 1
- 
-  // additional setup specific to the node's RX role
-  radio.startListening();  // put radio in RX mode
-}
-//-------------------------------------------------------------------
-void setup_odrive()
-{
-    // In this example we set the same parameters to both motors.
-  // You can of course set them different if you want.
-  // See the documentation or play around in odrivetool to see the available parameters
-
-  for (int m = 0; m < 2; ++m) {
-    odrive_serial << "w axis" << m << ".controller.config.vel_limit " << 1.5f << '\n';
-    odrive_serial << "w axis" << m << ".motor.config.current_lim " << 30.0f << '\n';
-
-    odrive_serial << "w axis" << m << ".controller.config.input_mode " << INPUT_MODE_PASSTHROUGH << '\n';
-    odrive_serial << "w axis" << m << ".controller.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
-  }
-
-  Serial.println("Ready!");
-  Serial.println("Send the character '0' or '1' to calibrate respective motor (you must do this before you can command movement)");
-
-  Serial.println("Send the character 'f' to move forward");
-  Serial.println("Send the character 'b' to move backward");
-  Serial.println("Send the character 'l' to spin to the left");
-  Serial.println("Send the character 'r' to spin to the right");
-  Serial.println("Send the character 'q' to drive to forward left");
-  Serial.println("Send the character 'w' to drive to forward right");
-  Serial.println("Send the character 'a' to drive to backward left");
-  Serial.println("Send the character 's to drive to backward right");
-
-  Serial.println("Send the character 'z' to move to 0");
-  Serial.println("Send the character 'i' to idle motor");
-
-  Serial.println("Send the character 'g' to read bus voltage, position, speed, current");
-  Serial.println("Send the character 'u' to increase power");
-  Serial.println("Send the character 'd' to decrease power");
-}
 //-------------------------------------------------------------------
 void setup() {
  
@@ -195,7 +74,7 @@ void setup() {
 
   Serial.println("LSM6DSOX alive!");
 
-  setup_sensors();
+  setup_sensors(sox);
 
 // wifi setup
 Serial.println("Connecting to wifi ...");
@@ -205,7 +84,7 @@ Serial.println("Connecting to wifi ...");
   }
   Serial.println(F("wifi alive!"));
 
-  setup_wifi();
+  setup_wifi(radio, address);
 // ODrive setup
   Serial.println("Connecting to ODrive ...");
   odrive_serial.begin(115200);
@@ -215,7 +94,7 @@ Serial.println("Connecting to wifi ...");
   Serial.println("ODrive alive ...");
 
   Serial.println("Setting ODRIVE parameters...");
-  setup_odrive();
+  setup_odrive(odrive);
 
   robot_state = robot_state_stopped;
 /*
@@ -231,9 +110,29 @@ Serial.println("Connecting to wifi ...");
 */
   robot_state = robot_state_stopped;
 
-  max_current = default_max_power;
+  max_current = init_torque;
+
   odrive.SetCurrent(0, 0);// stop the motors
   odrive.SetCurrent(1, 0);
+
+  Serial.println("Ready!");
+  Serial.println("Send the character '0' or '1' to calibrate respective motor (you must do this before you can command movement)");
+
+  Serial.println("Send the character 'f' to move forward");
+  Serial.println("Send the character 'b' to move backward");
+  Serial.println("Send the character 'l' to spin to the left");
+  Serial.println("Send the character 'r' to spin to the right");
+  Serial.println("Send the character 'q' to drive to forward left");
+  Serial.println("Send the character 'w' to drive to forward right");
+  Serial.println("Send the character 'a' to drive to backward left");
+  Serial.println("Send the character 's to drive to backward right");
+
+  Serial.println("Send the character 'z' to move to 0");
+  Serial.println("Send the character 'i' to idle motor");
+
+  Serial.println("Send the character 'g' to read bus voltage, position, speed, current");
+  Serial.println("Send the character 'u' to increase power");
+  Serial.println("Send the character 'd' to decrease power");
 }  // setup
 //-------------------------------------------------------------------
 void loop() 
