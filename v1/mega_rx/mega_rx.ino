@@ -1,4 +1,4 @@
-#define s_version "M.2025.07.16.13"
+#define s_version "M.2025.07.17.1"
 //-------------------------------------------------------------------
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
@@ -96,8 +96,6 @@ Serial.println("Connecting to wifi ...");
 
   Serial.println("Setting ODRIVE parameters...");
   setup_odrive(odrive);
-
-  robot_state = robot_state_stopped;
 /*
       int motornum = 0;
       int requested_state;
@@ -113,8 +111,8 @@ Serial.println("Connecting to wifi ...");
 
   max_current = init_torque;
 
-  odrive.SetCurrent(0, 0);// stop the motors
-  odrive.SetCurrent(1, 0);
+  odrive.SetVelocity(0, 0);// stop the motors
+  odrive.SetVelocity(1, 0);
 
   Serial.println("Ready!");
   Serial.println("Send the character '0' or '1' to calibrate respective motor (you must do this before you can command movement)");

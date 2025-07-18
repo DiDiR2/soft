@@ -6,10 +6,9 @@
 #define M0_DIR 1
 #define M1_DIR -1
 
-#define init_torque 2.5
+#define init_torque 0.5
 
-#define MAX_VELOCITY 1.2
-#define MAX_VELOCITY_ROTATION MAX_VELOCITY * 0.75
+#define VELOCITY_ROTATION_FACTOR 0.75
 //-------------------------------------------------------------------
 void handle_motor_command(t_ODriveArduino &odrive, char command);
 //-------------------------------------------------------------------

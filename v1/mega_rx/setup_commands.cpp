@@ -94,11 +94,11 @@ void setup_odrive(t_ODriveArduino &odrive)
   // See the documentation or play around in odrivetool to see the available parameters
 
   for (int m = 0; m < 2; ++m) {
-    odrive.serial_ << "w axis" << m << ".controller.config.vel_limit " << MAX_VELOCITY << '\n';
+    odrive.serial_ << "w axis" << m << ".controller.config.vel_limit " << 3.0 << '\n';
     odrive.serial_ << "w axis" << m << ".motor.config.current_lim " << 30.0f << '\n';
 
     odrive.serial_ << "w axis" << m << ".controller.config.input_mode " << INPUT_MODE_PASSTHROUGH << '\n';
-    odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_TORQUE_CONTROL << '\n';
+    odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_VELOCITY_CONTROL << '\n';
 
     odrive.serial_ << "w axis" << m << ".controller.config.enable_overspeed_error " << false << '\n';
   }
