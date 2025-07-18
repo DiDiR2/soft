@@ -1,4 +1,4 @@
-#define s_version "M.2025.07.17.1"
+#define s_version "M.2025.07.18.1"
 //-------------------------------------------------------------------
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
@@ -10,8 +10,6 @@
 
 #include "motor_commands.h"
 #include "setup_commands.h"
-
-// Printing with stream operator helper functions
 //-------------------------------------------------------------------
 // WIFI variables
 #define CE_PIN 9
@@ -109,7 +107,7 @@ Serial.println("Connecting to wifi ...");
 */
   robot_state = robot_state_stopped;
 
-  max_current = init_torque;
+  max_current = init_torque_or_speed;
 
   odrive.SetVelocity(0, 0);// stop the motors
   odrive.SetVelocity(1, 0);
@@ -172,7 +170,7 @@ void loop()
       Serial.print(F(": "));
       Serial.println(c_payload);  // print the payload's value
 
-      handle_motor_command(odrive, c_payload);
+      handle_motor_command_velocity_control(odrive, c_payload);
     }
 
     delay (10);

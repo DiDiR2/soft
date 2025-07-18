@@ -87,7 +87,7 @@ void setup_wifi(RF24 &radio, uint8_t address[][6])
   radio.startListening();  // put radio in RX mode
 }
 //-------------------------------------------------------------------
-void setup_odrive(t_ODriveArduino &odrive)
+void setup_odrive_for_velocity_control(t_ODriveArduino &odrive)
 {
     // In this example we set the same parameters to both motors.
   // You can of course set them different if you want.
@@ -101,6 +101,9 @@ void setup_odrive(t_ODriveArduino &odrive)
     odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_VELOCITY_CONTROL << '\n';
 
     odrive.serial_ << "w axis" << m << ".controller.config.enable_overspeed_error " << false << '\n';
+
+    odrive.serial_ << "w axis" << m << ".controller.config.vel_integrator_gain " << 0 << '\n';
+    odrive.serial_ << "w axis" << m << ".controller.config.vel_gain " << 2.5 << '\n';
   }
 }
 //-------------------------------------------------------------------

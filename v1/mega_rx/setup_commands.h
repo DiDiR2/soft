@@ -7,6 +7,6 @@
 //-------------------------------------------------------------------
 void setup_sensors(Adafruit_LSM6DSOX &sox);
 void setup_wifi(RF24 &radio, uint8_t address[][6]);
-void setup_odrive(t_ODriveArduino &);
+void setup_odrive_for_velocity_control(t_ODriveArduino &);
 //-------------------------------------------------------------------
 #endif setup_commands_H

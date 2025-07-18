@@ -6,11 +6,11 @@
 #define M0_DIR 1
 #define M1_DIR -1
 
-#define init_torque 0.5
+#define init_torque_or_speed 0.5
 
 #define VELOCITY_ROTATION_FACTOR 0.75
 //-------------------------------------------------------------------
-void handle_motor_command(t_ODriveArduino &odrive, char command);
+void handle_motor_command_velocity_control(t_ODriveArduino &odrive, char command);
 //-------------------------------------------------------------------
 #define robot_state_stopped 0
 #define robot_state_moving_forward 1

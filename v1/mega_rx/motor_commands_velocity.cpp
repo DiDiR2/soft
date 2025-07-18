@@ -1,7 +1,7 @@
 #include "motor_commands.h"
 #include "print_commands.h"
 //-------------------------------------------------------------------
-void handle_motor_command(t_ODriveArduino &odrive, char c)
+void handle_motor_command_velocity_control(t_ODriveArduino &odrive, char c)
 {
     // Run calibration sequence
     if (c == '0' || c == '1') {
@@ -237,7 +237,7 @@ void handle_motor_command(t_ODriveArduino &odrive, char c)
 
     if (c == 'c') {
       odrive.clear_errors();
-      max_current = init_torque;
+      max_current = init_torque_or_speed;
       for (int m = 0; m < 2; ++m){
         odrive.serial_ << "w axis" << m << ".controller.config.control_mode " << CONTROL_MODE_VELOCITY_CONTROL << '\n';
         delay(5);
